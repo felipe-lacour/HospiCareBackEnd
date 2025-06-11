@@ -1,0 +1,20 @@
+{
+    "name": "felipelacour/backend",
+    "autoload": {
+        "psr-4": {
+            "Felipelacour\\Backend\\": "src/",
+            "models\\": "models/",
+            "core\\": "core/",
+            "controllers\\": "controllers/"
+        }
+    },
+    "authors": [
+        {
+            "name": "felipe-lacour",
+            "email": "felipelacourhughes@gmail.com"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^6.10"
+    }
+}
