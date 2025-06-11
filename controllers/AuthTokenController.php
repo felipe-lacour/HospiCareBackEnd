@@ -3,10 +3,11 @@
 namespace controllers;
 
 use core\Controller;
-use models\UserAccount;
 use models\AuthToken;
+use models\UserAccount;
 
-class UserController extends Controller {
+class AuthTokenController extends Controller {
+    // Login endpoint
     public function login() {
         $body = json_decode(file_get_contents('php://input'), true);
 
@@ -24,44 +25,39 @@ class UserController extends Controller {
             return $this->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $tokenModel = new AuthToken();
-        $token = $tokenModel->generateToken($username);
+        // Generate token
+        $authTokenModel = new AuthToken();
+        $token = $authTokenModel->createToken($username);
 
-        return $this->json([
-            'success' => true,
-            'token' => $token,
-            'user' => [
-                'username' => $user['username'],
-                'role_id' => $user['role_id'],
-                'employee_id' => $user['employee_id']
-            ]
-        ]);
+        return $this->json(['token' => $token]);
     }
 
+    // Logout (delete token)
     public function logout() {
-        $headers = getallheaders();
+        $headers = apache_request_headers();
         $token = $headers['Authorization'] ?? null;
 
         if (!$token) {
-            return $this->json(['error' => 'No token provided'], 400);
+            return $this->json(['error' => 'Token required'], 400);
         }
 
-        $tokenModel = new AuthToken();
-        $tokenModel->invalidateToken($token);
+        $authTokenModel = new AuthToken();
+        $authTokenModel->invalidateToken($token);
 
         return $this->json(['success' => true]);
     }
 
+    // Get current user info
     public function me() {
-        $headers = getallheaders();
+        $headers = apache_request_headers();
         $token = $headers['Authorization'] ?? null;
 
         if (!$token) {
-            return $this->json(['error' => 'No token provided'], 400);
+            return $this->json(['error' => 'Token required'], 400);
         }
 
-        $tokenModel = new AuthToken();
-        $user = $tokenModel->getUserByToken($token);
+        $authTokenModel = new AuthToken();
+        $user = $authTokenModel->getUserByToken($token);
 
         if (!$user) {
             return $this->json(['error' => 'Invalid or expired token'], 401);

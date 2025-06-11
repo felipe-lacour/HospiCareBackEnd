@@ -11,20 +11,16 @@ use models\PasswordSetRequest;
 class Doctor extends Model {
     protected $table = 'doctors';
 
-public function createDoctor(array $personData, array $employeeData, array $doctorData, array $userData): array {
-    // 1. Create person
-    $personModel = new Person();
-    $personId = $personModel->create($personData);
-
-    // 2. Create employee
+public function createDoctor(array $personData, array $doctorData, array $userData): array {
+    // 1. Create employee, person, and user account together
     $employeeModel = new Employee();
-    $employeeId = $employeeModel->create([
-        'person_id' => $personId,
-        'email' => $employeeData['email'],
-        'hire_date' => $employeeData['hire_date']
-    ]);
+    $employeeResult = $employeeModel->createWithAccount($personData, $userData['role_id']);
 
-    // 3. Create doctor
+    $employeeId = $employeeResult['employee_id'];
+    $username = $employeeResult['username'];
+    $link = $employeeResult['setup_link'];
+
+    // 2. Create doctor
     $stmt = $this->db->prepare("
         INSERT INTO {$this->table} (doctor_id, license_no, specialty)
         VALUES (:doctor_id, :license_no, :specialty)
@@ -34,27 +30,6 @@ public function createDoctor(array $personData, array $employeeData, array $doct
         'license_no' => $doctorData['license_no'],
         'specialty' => $doctorData['specialty']
     ]);
-
-    // 4. Create user account
-    $userModel = new UserAccount();
-    $username = $userData['username'];
-    $roleId = $userData['role_id'];
-
-    $placeholderPassword = password_hash(bin2hex(random_bytes(6)), PASSWORD_BCRYPT);
-
-    $userModel->create([
-        'username' => $username,
-        'employee_id' => $employeeId,
-        'role_id' => $roleId,
-        'pwd_hash' => $placeholderPassword
-    ]);
-
-    // 5. Create token and return link
-    $token = bin2hex(random_bytes(32));
-    $psrModel = new PasswordSetRequest();
-    $psrModel->createToken($employeeId, $token);
-
-    $link = $this->sendPasswordSetupEmail($employeeData['email'], $username, $token);
 
     return [
         'employee_id' => $employeeId,
