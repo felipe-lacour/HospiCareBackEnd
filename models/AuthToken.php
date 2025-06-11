@@ -8,22 +8,42 @@ use DateTime;
 class AuthToken extends Model {
     protected string $table = 'auth_tokens';
 
-    public function createToken(string $username): string {
+    public function create(array $data): int {
+        if (!isset($data['token'], $data['user_id'], $data['expires_at'])) {
+            throw new \Exception("Missing required fields for token creation.");
+        }
+
+        $stmt = $this->db->prepare("
+            INSERT INTO {$this->table} (token, user_id, expires_at)
+            VALUES (:token, :user_id, :expires_at)
+        ");
+        $stmt->execute([
+            'token' => $data['token'],
+            'user_id' => $data['user_id'], // ✅ correct key
+            'expires_at' => $data['expires_at'],
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    public function createToken(int $userId): string {
         $token = bin2hex(random_bytes(32));
         $expiresAt = (new DateTime('+7 days'))->format('Y-m-d H:i:s');
 
-        $stmt = $this->db->prepare("INSERT INTO {$this->table} (token, username, expires_at) VALUES (:token, :username, :expires_at)");
-        $stmt->execute([
+        $this->create([
             'token' => $token,
-            'username' => $username,
-            'expires_at' => $expiresAt
+            'user_id' => $userId,
+            'expires_at' => $expiresAt,
         ]);
 
         return $token;
     }
 
     public function getUserByToken(string $token): ?array {
-        $stmt = $this->db->prepare("SELECT username FROM {$this->table} WHERE token = :token AND expires_at > NOW()");
+        $stmt = $this->db->prepare("
+            SELECT user_id FROM {$this->table}
+            WHERE token = :token AND expires_at > NOW()
+        ");
         $stmt->execute(['token' => $token]);
         $result = $stmt->fetch();
         return $result ?: null;
