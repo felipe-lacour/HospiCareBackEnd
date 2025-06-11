@@ -12,7 +12,7 @@ class Prescription extends Model {
     }
 
     public function getById($id) {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE rx_id = :id");
+    $stmt = $this->db->prepare("SELECT * FROM prescriptions WHERE prescription_id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
     }

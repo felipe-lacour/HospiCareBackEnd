@@ -38,7 +38,7 @@ class PrescriptionController extends Controller {
 
         try {
             $rxId = $this->rxModel->create($body);
-            $this->json(['success' => true, 'rx_id' => $rxId]);
+            $this->json(['success' => true, 'prescription_id' => $rxId]);
         } catch (\Exception $e) {
             $this->json(['error' => $e->getMessage()], 500);
         }
@@ -46,11 +46,11 @@ class PrescriptionController extends Controller {
 
     public function addItem() {
         $body = json_decode(file_get_contents('php://input'), true);
-        if (!isset($body['rx_id'], $body['drug']))
-            return $this->json(['error' => 'Missing rx_id or drug'], 400);
+        if (!isset($body['prescription_id'], $body['drug']))
+            return $this->json(['error' => 'Missing prescription_id or drug'], 400);
 
         try {
-            $itemId = $this->itemModel->addItem($body['rx_id'], $body);
+            $itemId = $this->itemModel->addItem($body['prescription_id'], $body);
             $this->json(['success' => true, 'item_id' => $itemId]);
         } catch (\Exception $e) {
             $this->json(['error' => $e->getMessage()], 500);
@@ -59,7 +59,7 @@ class PrescriptionController extends Controller {
 
     public function delete() {
         $id = $_GET['id'] ?? null;
-        if (!$id) return $this->json(['error' => 'Missing rx_id'], 400);
+        if (!$id) return $this->json(['error' => 'Missing prescription_id'], 400);
 
         try {
             $this->rxModel->delete($id);

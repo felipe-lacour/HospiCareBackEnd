@@ -7,19 +7,19 @@ use core\Model;
 class RxItem extends Model {
     protected $table = 'rx_items';
 
-    public function getByPrescription($rxId) {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE rx_id = :rx");
-        $stmt->execute(['rx' => $rxId]);
+    public function getByPrescription($prescriptionId) {
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE prescription_id = :prescription_id");
+        $stmt->execute(['prescription_id' => $prescriptionId]);
         return $stmt->fetchAll();
     }
 
-    public function addItem($rxId, array $data) {
+    public function addItem($prescriptionId, array $data) {
         $stmt = $this->db->prepare("
-            INSERT INTO {$this->table} (rx_id, drug, dose, frequency, duration_days)
-            VALUES (:rx_id, :drug, :dose, :frequency, :duration_days)
+            INSERT INTO {$this->table} (prescription_id, drug, dose, frequency, duration_days)
+            VALUES (:prescription_id, :drug, :dose, :frequency, :duration_days)
         ");
         $stmt->execute([
-            'rx_id' => $rxId,
+            'prescription_id' => $prescriptionId,
             'drug' => $data['drug'],
             'dose' => $data['dose'] ?? null,
             'frequency' => $data['frequency'] ?? null,
