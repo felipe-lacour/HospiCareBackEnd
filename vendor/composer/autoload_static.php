@@ -10,6 +10,7 @@ class ComposerStaticInit746ff1544327f93a12d5eb21292ad575
         'm' => 
         array (
             'models\\' => 7,
+            'middlewares\\' => 12,
         ),
         'c' => 
         array (
@@ -30,6 +31,10 @@ class ComposerStaticInit746ff1544327f93a12d5eb21292ad575
         'models\\' => 
         array (
             0 => __DIR__ . '/../..' . '/models',
+        ),
+        'middlewares\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/middlewares',
         ),
         'core\\' => 
         array (

@@ -4,6 +4,7 @@ namespace controllers;
 
 use core\Controller;
 use models\Patient;
+use middlewares\AuthMiddleware;
 
 class PatientController extends Controller {
     private Patient $patientModel;
@@ -13,10 +14,17 @@ class PatientController extends Controller {
     }
 
     public function index() {
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
+
+        // All roles can view patients
         $this->json($this->patientModel->getAll());
     }
 
     public function show() {
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
+
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['error' => 'Missing patient ID'], 400);
 
@@ -25,7 +33,9 @@ class PatientController extends Controller {
     }
 
     public function create() {
-        // Normally this would return an HTML form — we'll return expected field structure instead
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+
         $this->json([
             'expected_fields' => [
                 'dni', 'first_name', 'last_name', 'birth_date', 'address', 'phone',
@@ -35,9 +45,10 @@ class PatientController extends Controller {
     }
 
     public function store() {
-        $body = json_decode(file_get_contents('php://input'), true);
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
 
-        // Validate required fields
+        $body = json_decode(file_get_contents('php://input'), true);
         $required = ['dni', 'first_name', 'last_name', 'birth_date', 'address', 'phone', 'medical_rec_no', 'blood_type'];
         foreach ($required as $field) {
             if (empty($body[$field])) {
@@ -68,6 +79,9 @@ class PatientController extends Controller {
     }
 
     public function edit() {
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['error' => 'Missing patient ID'], 400);
 
@@ -76,40 +90,45 @@ class PatientController extends Controller {
     }
 
     public function update() {
-    $id = $_GET['id'] ?? null;
-    if (!$id) return $this->json(['error' => 'Missing patient ID'], 400);
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
 
-    $body = json_decode(file_get_contents('php://input'), true);
-    if (!$body) return $this->json(['error' => 'Invalid JSON'], 400);
+        $id = $_GET['id'] ?? null;
+        if (!$id) return $this->json(['error' => 'Missing patient ID'], 400);
 
-    try {
-        $updated = $this->patientModel->updatePatient($id, $body);
-        if ($updated) {
-            $this->json(['success' => true, 'message' => "Patient $id updated."]);
-        } else {
-            $this->json(['error' => 'Nothing was updated'], 200);
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!$body) return $this->json(['error' => 'Invalid JSON'], 400);
+
+        try {
+            $updated = $this->patientModel->updatePatient($id, $body);
+            if ($updated) {
+                $this->json(['success' => true, 'message' => "Patient $id updated."]);
+            } else {
+                $this->json(['error' => 'Nothing was updated'], 200);
+            }
+        } catch (\Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
         }
-    } catch (\Exception $e) {
-        $this->json(['error' => $e->getMessage()], 500);
-    }
-}
-public function delete() {
-    $id = $_GET['id'] ?? null;
-
-    if (!$id) {
-        return $this->json(['error' => 'Missing patient ID'], 400);
     }
 
-    try {
-        $deleted = $this->patientModel->deletePatientById($id);
+    public function delete() {
+        $user = AuthMiddleware::getUserFromToken();
+        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
 
-        if ($deleted) {
-            $this->json(['success' => true, 'message' => "Patient $id deleted."]);
-        } else {
-            $this->json(['error' => 'Patient not found or already deleted.'], 404);
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            return $this->json(['error' => 'Missing patient ID'], 400);
         }
-    } catch (\Exception $e) {
-        $this->json(['error' => $e->getMessage()], 500);
+
+        try {
+            $deleted = $this->patientModel->deletePatientById($id);
+            if ($deleted) {
+                $this->json(['success' => true, 'message' => "Patient $id deleted."]);
+            } else {
+                $this->json(['error' => 'Patient not found or already deleted.'], 404);
+            }
+        } catch (\Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
     }
-}
 }

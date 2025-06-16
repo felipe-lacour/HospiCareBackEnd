@@ -5,6 +5,8 @@ namespace controllers;
 use core\Controller;
 use models\ClinicalFile;
 use models\ConsultNote;
+use models\AuthToken;
+use models\UserAccount;
 
 class ClinicalFileController extends Controller {
     protected ClinicalFile $cfModel;
@@ -15,7 +17,32 @@ class ClinicalFileController extends Controller {
         $this->noteModel = new ConsultNote();
     }
 
+    private function getCurrentUser() {
+        $headers = apache_request_headers();
+        $authHeader = $headers['Authorization'] ?? '';
+
+        if (!str_starts_with($authHeader, 'Bearer ')) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Missing or invalid token header']);
+            exit;
+        }
+
+        $token = substr($authHeader, 7);
+        $tokenModel = new AuthToken();
+        $userData = $tokenModel->getUserByToken($token);
+
+        if (!$userData) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid or expired token']);
+            exit;
+        }
+
+        $userModel = new UserAccount();
+        return $userModel->findByUsername($userData['user_id']);
+    }
+
     public function show() {
+        $user = $this->getCurrentUser();
         $patientId = $_GET['patient_id'] ?? null;
         if (!$patientId) return $this->json(['error' => 'Missing patient_id'], 400);
 
@@ -24,6 +51,9 @@ class ClinicalFileController extends Controller {
     }
 
     public function store() {
+        $user = $this->getCurrentUser();
+        if ($user['role_id'] !== 3) return $this->json(['error' => 'Unauthorized'], 403);
+
         $body = json_decode(file_get_contents('php://input'), true);
         $pid = $body['patient_id'] ?? null;
         if (!$pid) return $this->json(['error' => 'Missing patient_id'], 400);
@@ -33,6 +63,7 @@ class ClinicalFileController extends Controller {
     }
 
     public function notes() {
+        $user = $this->getCurrentUser();
         $fileId = $_GET['file_id'] ?? null;
         if (!$fileId) return $this->json(['error' => 'Missing file_id'], 400);
 
@@ -41,11 +72,14 @@ class ClinicalFileController extends Controller {
     }
 
     public function addNote() {
+        $user = $this->getCurrentUser();
+        if ($user['role_id'] !== 2) return $this->json(['error' => 'Only doctors can add notes'], 403);
+
         $body = json_decode(file_get_contents('php://input'), true);
-        if (!$body || !isset($body['file_id'], $body['doctor_id'], $body['text']))
+        if (!$body || !isset($body['file_id'], $body['text']))
             return $this->json(['error' => 'Missing fields'], 400);
 
-        $id = $this->noteModel->create($body['file_id'], $body['doctor_id'], $body['text']);
+        $id = $this->noteModel->create($body['file_id'], $user['employee_id'], $body['text']);
         $this->json(['success' => true, 'note_id' => $id]);
     }
 }

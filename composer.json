@@ -5,7 +5,8 @@
             "Felipelacour\\Backend\\": "src/",
             "models\\": "models/",
             "core\\": "core/",
-            "controllers\\": "controllers/"
+            "controllers\\": "controllers/",
+            "middlewares\\": "middlewares/"
         }
     },
     "authors": [

@@ -39,15 +39,18 @@ class AuthToken extends Model {
         return $token;
     }
 
-    public function getUserByToken(string $token): ?array {
-        $stmt = $this->db->prepare("
-            SELECT user_id FROM {$this->table}
-            WHERE token = :token AND expires_at > NOW()
-        ");
-        $stmt->execute(['token' => $token]);
-        $result = $stmt->fetch();
-        return $result ?: null;
-    }
+public function getUserByToken(string $token): ?array {
+    $sql = "SELECT ua.username, ua.role_id, ua.employee_id
+            FROM auth_tokens at
+            JOIN user_accounts ua ON ua.username = at.user_id
+            WHERE at.token = :token AND at.expires_at > NOW()";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['token' => $token]);
+    $user = $stmt->fetch();
+
+    return $user ?: null;
+}
 
     public function invalidateToken(string $token): void {
         $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE token = :token");

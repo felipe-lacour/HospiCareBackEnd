@@ -59,4 +59,29 @@ class UserAccount extends Model {
             'pwd_hash'    => $data['pwd_hash']
         ]);
     }
+
+    public function createWithTokenLink(int $employeeId, string $username, int $roleId): array {
+        // Create the account with NULL password
+        $stmt = $this->db->prepare("
+            INSERT INTO {$this->table} (username, role_id, employee_id)
+            VALUES (:username, :role_id, :employee_id)
+        ");
+        $stmt->execute([
+            'username' => $username,
+            'role_id' => $roleId,
+            'employee_id' => $employeeId
+        ]);
+
+        // Generate setup token
+        $token = bin2hex(random_bytes(32));
+
+        // Store password setup request
+        $psr = new \models\PasswordSetRequest();
+        $psr->createToken($employeeId, $token);
+
+        return [
+            'username' => $username,
+            'setup_link' => "http://localhost:8000/auth/set-password?token=$token"
+        ];
+    }
 }

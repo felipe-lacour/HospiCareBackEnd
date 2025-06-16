@@ -1,5 +1,15 @@
 <?php
 
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+// Para manejar preflight OPTIONS
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -13,7 +23,8 @@ use controllers\AppointmentController;
 use controllers\ClinicalFileController;
 use controllers\PrescriptionController;
 use controllers\AuthController;
-use controllers\AuthTokenController; // ⬅️ Include AuthTokenController if needed
+use controllers\AuthTokenController;
+use controllers\EmployeeController;
 
 $router = new Router();
 
@@ -54,7 +65,9 @@ $router->get('/prescriptions/delete', [PrescriptionController::class, 'delete'])
 // === Authentication ===
 $router->post('/auth/send-link', [AuthController::class, 'sendPasswordSetupLink']);
 $router->post('/auth/set-password', [AuthController::class, 'setPassword']);
-$router->post('/auth/login', [AuthController::class, 'login']); // ⬅️ Add this route for token generation
+$router->post('/auth/login', [AuthController::class, 'login']);
+
+$router->post('/employee/store', [EmployeeController::class, 'store']);
 
 // Optionally, you can also add token-related routes like revoke, refresh, etc.
 // $router->post('/auth/token/revoke', [AuthTokenController::class, 'revoke']);

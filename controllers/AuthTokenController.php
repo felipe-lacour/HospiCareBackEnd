@@ -7,6 +7,19 @@ use models\AuthToken;
 use models\UserAccount;
 
 class AuthTokenController extends Controller {
+    private ?string $token = null;
+    private ?array $authUser = null;
+
+    public function __construct() {
+        $headers = getallheaders();
+        $this->token = $headers['Authorization'] ?? null;
+
+        if ($this->token) {
+            $authTokenModel = new AuthToken();
+            $this->authUser = $authTokenModel->getUserByToken($this->token);
+        }
+    }
+
     // Login endpoint
     public function login() {
         $body = json_decode(file_get_contents('php://input'), true);
@@ -29,40 +42,35 @@ class AuthTokenController extends Controller {
         $authTokenModel = new AuthToken();
         $token = $authTokenModel->createToken($username);
 
-        return $this->json(['token' => $token]);
+        return $this->json([
+            'success' => true,
+            'token' => $token,
+            'user' => [
+                'username' => $user['username'],
+                'role_id' => $user['role_id'],
+                'employee_id' => $user['employee_id']
+            ]
+        ]);
     }
 
-    // Logout (delete token)
+    // Logout endpoint
     public function logout() {
-        $headers = apache_request_headers();
-        $token = $headers['Authorization'] ?? null;
-
-        if (!$token) {
+        if (!$this->token) {
             return $this->json(['error' => 'Token required'], 400);
         }
 
         $authTokenModel = new AuthToken();
-        $authTokenModel->invalidateToken($token);
+        $authTokenModel->invalidateToken($this->token);
 
         return $this->json(['success' => true]);
     }
 
-    // Get current user info
+    // Who am I?
     public function me() {
-        $headers = apache_request_headers();
-        $token = $headers['Authorization'] ?? null;
-
-        if (!$token) {
-            return $this->json(['error' => 'Token required'], 400);
-        }
-
-        $authTokenModel = new AuthToken();
-        $user = $authTokenModel->getUserByToken($token);
-
-        if (!$user) {
+        if (!$this->authUser) {
             return $this->json(['error' => 'Invalid or expired token'], 401);
         }
 
-        return $this->json(['user' => $user]);
+        return $this->json(['user' => $this->authUser]);
     }
 }
