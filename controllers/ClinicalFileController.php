@@ -18,7 +18,7 @@ class ClinicalFileController extends Controller {
     }
 
     private function getCurrentUser() {
-        $headers = apache_request_headers();
+        $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
 
         if (!str_starts_with($authHeader, 'Bearer ')) {
@@ -38,7 +38,7 @@ class ClinicalFileController extends Controller {
         }
 
         $userModel = new UserAccount();
-        return $userModel->findByUsername($userData['user_id']);
+        return $userModel->findByUsername($userData['username']);
     }
 
     public function show() {
@@ -82,4 +82,37 @@ class ClinicalFileController extends Controller {
         $id = $this->noteModel->create($body['file_id'], $user['employee_id'], $body['text']);
         $this->json(['success' => true, 'note_id' => $id]);
     }
+
+    public function allNotes() {
+        $user = $this->getCurrentUser();
+        if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
+
+        if ((int)$user['role_id'] === 1) {
+            $notes = $this->noteModel->getAllWithDetails();
+            $this->json($notes);
+        } else return $this->json(['error' => 'Access denied'], 403);
+    }
+
+    public function updateNote() {
+        $user = $this->getCurrentUser();
+        if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
+
+        if ((int)$user['role_id'] != 3) {
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (!$input || !isset($input['note_id'], $input['text'])) {
+                return $this->json(['error' => 'Missing fields'], 400);
+            }
+
+            $updated = $this->noteModel->updateText($input['note_id'], $input['text']);
+
+            echo json_encode(['success' => $updated]);
+        } else return $this->json(['error' => 'Access denied'], 403);
+    }
 }
+
+
+
+
+
+

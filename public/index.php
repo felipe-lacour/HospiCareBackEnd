@@ -54,6 +54,8 @@ $router->get('/clinical/show', [ClinicalFileController::class, 'show']);
 $router->post('/clinical/store', [ClinicalFileController::class, 'store']);
 $router->get('/clinical/notes', [ClinicalFileController::class, 'notes']);
 $router->post('/clinical/notes/add', [ClinicalFileController::class, 'addNote']);
+$router->get('/clinical/notes/all', [ClinicalFileController::class, 'allNotes']);
+$router->post('/clinical/notes/update', [ClinicalFileController::class, 'updateNote']);
 
 // === Prescriptions ===
 $router->get('/prescriptions', [PrescriptionController::class, 'index']);
