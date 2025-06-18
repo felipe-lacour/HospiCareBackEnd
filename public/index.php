@@ -37,10 +37,14 @@ $router->get('/patients/edit', [PatientController::class, 'edit']);
 $router->post('/patients/update', [PatientController::class, 'update']);
 $router->get('/patients/delete', [PatientController::class, 'delete']);
 
+// revisar rutas y resolver redundancia
+
 // === Doctors ===
 $router->get('/doctors', [DoctorController::class, 'index']);
 $router->get('/doctors/show', [DoctorController::class, 'show']);
 $router->post('/doctors/store', [DoctorController::class, 'store']);
+
+// agregar ruta para editar doctor y para eliminar doctor
 
 // === Appointments ===
 $router->get('/appointments', [AppointmentController::class, 'index']);
@@ -48,6 +52,8 @@ $router->get('/appointments/show', [AppointmentController::class, 'show']);
 $router->post('/appointments/store', [AppointmentController::class, 'store']);
 $router->post('/appointments/update', [AppointmentController::class, 'update']);
 $router->get('/appointments/delete', [AppointmentController::class, 'delete']);
+
+// appointments CRUD completo
 
 // === Clinical Files ===
 $router->get('/clinical/show', [ClinicalFileController::class, 'show']);
@@ -57,6 +63,8 @@ $router->post('/clinical/notes/add', [ClinicalFileController::class, 'addNote'])
 $router->get('/clinical/notes/all', [ClinicalFileController::class, 'allNotes']);
 $router->post('/clinical/notes/update', [ClinicalFileController::class, 'updateNote']);
 
+// chequear flujos de trabajo de clinical files y notas
+
 // === Prescriptions ===
 $router->get('/prescriptions', [PrescriptionController::class, 'index']);
 $router->get('/prescriptions/show', [PrescriptionController::class, 'show']);
@@ -64,15 +72,16 @@ $router->post('/prescriptions/store', [PrescriptionController::class, 'store']);
 $router->post('/prescriptions/additem', [PrescriptionController::class, 'addItem']);
 $router->get('/prescriptions/delete', [PrescriptionController::class, 'delete']);
 
+// revisar si hay algo raro
+
 // === Authentication ===
 $router->post('/auth/send-link', [AuthController::class, 'sendPasswordSetupLink']);
 $router->post('/auth/set-password', [AuthController::class, 'setPassword']);
 $router->post('/auth/login', [AuthController::class, 'login']);
 
-$router->post('/employee/store', [EmployeeController::class, 'store']);
+// chequear procedimientos de autenticacion y roles
 
-// Optionally, you can also add token-related routes like revoke, refresh, etc.
-// $router->post('/auth/token/revoke', [AuthTokenController::class, 'revoke']);
+$router->post('/employee/store', [EmployeeController::class, 'store']);
 
 // === Routing Dispatcher ===
 $basePath = '/HospiCareDev/BACKEND/public';

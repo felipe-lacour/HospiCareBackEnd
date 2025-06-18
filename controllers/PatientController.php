@@ -46,7 +46,7 @@ class PatientController extends Controller {
 
     public function store() {
         $user = AuthMiddleware::getUserFromToken();
-        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+        if (!$user ) return $this->json(['error' => 'Forbidden'], 403);
 
         $body = json_decode(file_get_contents('php://input'), true);
         $required = ['dni', 'first_name', 'last_name', 'birth_date', 'address', 'phone', 'medical_rec_no', 'blood_type'];

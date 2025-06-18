@@ -52,7 +52,7 @@ class ClinicalFileController extends Controller {
 
     public function store() {
         $user = $this->getCurrentUser();
-        if ($user['role_id'] !== 3) return $this->json(['error' => 'Unauthorized'], 403);
+        if ($user['role_id'] !== 3 && $user['role_id'] !== 1) return $this->json(['error' => 'Unauthorized'], 403);
 
         $body = json_decode(file_get_contents('php://input'), true);
         $pid = $body['patient_id'] ?? null;
@@ -73,7 +73,7 @@ class ClinicalFileController extends Controller {
 
     public function addNote() {
         $user = $this->getCurrentUser();
-        if ($user['role_id'] !== 2) return $this->json(['error' => 'Only doctors can add notes'], 403);
+        if ($user['role_id'] !== 2 && $user['role_id'] !== 1) return $this->json(['error' => 'Only doctors can add notes'], 403);
 
         $body = json_decode(file_get_contents('php://input'), true);
         if (!$body || !isset($body['file_id'], $body['text']))
