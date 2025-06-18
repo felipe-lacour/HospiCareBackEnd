@@ -32,66 +32,51 @@ class PatientController extends Controller {
         return $data ? $this->json($data) : $this->json(['error' => 'Patient not found'], 404);
     }
 
-    public function create() {
-        $user = AuthMiddleware::getUserFromToken();
-        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+public function store() {
+    $user = AuthMiddleware::getUserFromToken();
+    if (!$user) return $this->json(['error' => 'Forbidden'], 403);
 
-        $this->json([
-            'expected_fields' => [
-                'dni', 'first_name', 'last_name', 'birth_date', 'address', 'phone',
-                'medical_rec_no', 'blood_type'
-            ]
-        ]);
-    }
+    $body = json_decode(file_get_contents('php://input'), true);
 
-    public function store() {
-        $user = AuthMiddleware::getUserFromToken();
-        if (!$user ) return $this->json(['error' => 'Forbidden'], 403);
-
-        $body = json_decode(file_get_contents('php://input'), true);
-        $required = ['dni', 'first_name', 'last_name', 'birth_date', 'address', 'phone', 'medical_rec_no', 'blood_type'];
-        foreach ($required as $field) {
-            if (empty($body[$field])) {
-                return $this->json(['error' => "Missing field: $field"], 400);
-            }
-        }
-
-        $personData = [
-            'dni' => $body['dni'],
-            'first_name' => $body['first_name'],
-            'last_name' => $body['last_name'],
-            'birth_date' => $body['birth_date'],
-            'address' => $body['address'],
-            'phone' => $body['phone']
-        ];
-
-        $patientData = [
-            'medical_rec_no' => $body['medical_rec_no'],
-            'blood_type' => $body['blood_type']
-        ];
-
-        try {
-            $newId = $this->patientModel->createPatient($personData, $patientData);
-            $this->json(['success' => true, 'patient_id' => $newId], 201);
-        } catch (\Exception $e) {
-            $this->json(['error' => $e->getMessage()], 500);
+    $required = ['dni', 'first_name', 'last_name', 'birth_date', 'address', 'phone', 'blood_type'];
+    foreach ($required as $field) {
+        if (empty($body[$field])) {
+            return $this->json(['error' => "Missing field: $field"], 400);
         }
     }
 
-    public function edit() {
-        $user = AuthMiddleware::getUserFromToken();
-        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+    // Generar código único antes de crear
+    $medicalRecNo = 'MRN' . date('YmdHis') . strtoupper(bin2hex(random_bytes(2)));
 
-        $id = $_GET['id'] ?? null;
-        if (!$id) return $this->json(['error' => 'Missing patient ID'], 400);
+    $personData = [
+        'dni' => $body['dni'],
+        'first_name' => $body['first_name'],
+        'last_name' => $body['last_name'],
+        'birth_date' => $body['birth_date'],
+        'address' => $body['address'],
+        'phone' => $body['phone']
+    ];
 
-        $data = $this->patientModel->getPatientById($id);
-        return $data ? $this->json(['editable_data' => $data]) : $this->json(['error' => 'Patient not found'], 404);
+    $patientData = [
+        'medical_rec_no' => $medicalRecNo,
+        'blood_type' => $body['blood_type']
+    ];
+
+    try {
+        $newId = $this->patientModel->createPatient($personData, $patientData);
+        return $this->json([
+            'success' => true,
+            'patient_id' => $newId,
+            'medical_rec_no' => $medicalRecNo
+        ], 201);
+    } catch (\Exception $e) {
+        return $this->json(['error' => $e->getMessage()], 500);
     }
+}
 
     public function update() {
         $user = AuthMiddleware::getUserFromToken();
-        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+        if (!$user || ($user['role_id'] !== 3 && $user['role_id'] !== 1)) return $this->json(['error' => 'Forbidden'], 403);
 
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['error' => 'Missing patient ID'], 400);
@@ -113,7 +98,7 @@ class PatientController extends Controller {
 
     public function delete() {
         $user = AuthMiddleware::getUserFromToken();
-        if (!$user || $user['role_id'] !== 3) return $this->json(['error' => 'Forbidden'], 403);
+        if (!$user || ($user['role_id'] !== 3 && $user['role_id'] !== 1)) return $this->json(['error' => 'Forbidden'], 403);
 
         $id = $_GET['id'] ?? null;
         if (!$id) {
