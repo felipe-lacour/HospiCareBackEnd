@@ -48,11 +48,6 @@ public function store() {
     // Generate MRN
     $medicalRecNo = 'MRN' . date('YmdHis') . strtoupper(bin2hex(random_bytes(2)));
 
-    // ─────────── NEW: create clinical file first ───────────
-    $cfModel = new \models\ClinicalFile();
-    $cfModel->create($medicalRecNo);
-    // ────────────────────────────────────────────────────────
-
     $personData = [
         'dni'        => $body['dni'],
         'first_name' => $body['first_name'],
@@ -68,7 +63,12 @@ public function store() {
     ];
 
     try {
+        // 1) Create patient first (parent FK must exist)
         $newId = $this->patientModel->createPatient($personData, $patientData);
+
+        // 2) Then create clinical file (child, with ON DELETE CASCADE)
+        $cfModel = new \models\ClinicalFile();
+        $cfModel->create($medicalRecNo);
 
         return $this->json([
             'success'        => true,
