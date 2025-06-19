@@ -58,12 +58,8 @@ class DoctorController extends Controller {
                 'last_name' => $body['last_name'],
                 'birth_date' => $body['birth_date'],
                 'address' => $body['address'],
-                'phone' => $body['phone']
-            ];
-
-            $employeeData = [
+                'phone' => $body['phone'],
                 'email' => $body['email'],
-                'hire_date' => date('Y-m-d H:i:s'),
             ];
 
             $doctorData = [
@@ -71,12 +67,7 @@ class DoctorController extends Controller {
                 'specialty' => $body['specialty']
             ];
 
-            $userData = [
-                'username' => $body['username'],
-                'role_id' => $body['role_id'] ?? 2
-            ];
-
-            $result = $this->doctorModel->createDoctor($personData, $employeeData, $doctorData, $userData);
+            $result = $this->doctorModel->createDoctor($personData, $doctorData);
 
             $this->json([
                 'success' => true,
@@ -92,11 +83,59 @@ class DoctorController extends Controller {
     private function getAuthenticatedUser(): ?array {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
-        $token = str_replace('Bearer ', '', $authHeader);
 
-        if (!$token) return null;
+        if (!str_starts_with($authHeader, 'Bearer ')) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Missing or invalid token header']);
+            exit;
+        }
 
-        $authModel = new AuthToken();
-        return $authModel->getUserByToken($token);
+        $token = substr($authHeader, 7);
+        $tokenModel = new AuthToken();
+        $userData = $tokenModel->getUserByToken($token);
+
+        if (!$userData) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid or expired token']);
+            exit;
+        }
+        
+        return $userData;
+    }
+
+    public function update() {
+        $user = $this->getAuthenticatedUser();
+        if (!$user || $user['role_id'] != 1) {
+            return $this->json(['error' => 'Only admins can update doctors'], 403);
+        }
+
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!$body || !isset($body['doctor_id'])) {
+            return $this->json(['error' => 'Invalid input'], 400);
+        }
+
+        try {
+            $doctorId = (int)$body['doctor_id'];
+
+            $personData = [
+                'first_name' => $body['first_name'],
+                'last_name' => $body['last_name'],
+                'address' => $body['address'],
+                'phone' => $body['phone'],
+                'email' => $body['email']
+            ];
+
+            $doctorData = [
+                'license_no' => $body['license_no'],
+                'specialty' => $body['specialty']
+            ];
+
+            $username = $body['username'] ?? null;
+
+            $this->doctorModel->updateDoctor($doctorId, $personData, $doctorData, $username);
+            $this->json(['success' => true]);
+        } catch (\Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

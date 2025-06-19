@@ -43,6 +43,7 @@ $router->get('/patients/delete', [PatientController::class, 'delete']);
 $router->get('/doctors', [DoctorController::class, 'index']);
 $router->get('/doctors/show', [DoctorController::class, 'show']);
 $router->post('/doctors/store', [DoctorController::class, 'store']);
+$router->post('/doctors/update', [DoctorController::class, 'update']);
 
 // agregar ruta para editar doctor y para eliminar doctor
 

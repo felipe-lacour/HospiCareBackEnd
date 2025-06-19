@@ -39,7 +39,7 @@ class Employee extends Model {
         return $stmt->fetch();
     }
 
-        public function createWithAccount(array $personData, int $roleId): array {
+    public function createWithAccount(array $personData, int $roleId): array {
         // 1. Create person
         $personModel = new Person();
         $personId = $personModel->create($personData);
