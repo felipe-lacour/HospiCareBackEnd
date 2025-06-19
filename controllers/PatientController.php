@@ -45,28 +45,34 @@ public function store() {
         }
     }
 
-    // Generar código único antes de crear
+    // Generate MRN
     $medicalRecNo = 'MRN' . date('YmdHis') . strtoupper(bin2hex(random_bytes(2)));
 
+    // ─────────── NEW: create clinical file first ───────────
+    $cfModel = new \models\ClinicalFile();
+    $cfModel->create($medicalRecNo);
+    // ────────────────────────────────────────────────────────
+
     $personData = [
-        'dni' => $body['dni'],
+        'dni'        => $body['dni'],
         'first_name' => $body['first_name'],
-        'last_name' => $body['last_name'],
+        'last_name'  => $body['last_name'],
         'birth_date' => $body['birth_date'],
-        'address' => $body['address'],
-        'phone' => $body['phone']
+        'address'    => $body['address'],
+        'phone'      => $body['phone']
     ];
 
     $patientData = [
         'medical_rec_no' => $medicalRecNo,
-        'blood_type' => $body['blood_type']
+        'blood_type'     => $body['blood_type']
     ];
 
     try {
         $newId = $this->patientModel->createPatient($personData, $patientData);
+
         return $this->json([
-            'success' => true,
-            'patient_id' => $newId,
+            'success'        => true,
+            'patient_id'     => $newId,
             'medical_rec_no' => $medicalRecNo
         ], 201);
     } catch (\Exception $e) {
