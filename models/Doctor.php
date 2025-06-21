@@ -75,11 +75,10 @@ class Doctor extends Model {
         return $stmt->fetch();
     }
 
-    public function updateDoctor(int $doctorId, array $personData, array $doctorData, ?string $username = null): void {
+    public function updateDoctor(int $doctorId, array $personData, array $doctorData, string $email, string $username): void {
         $stmt = $this->db->prepare("
             SELECT e.person_id
             FROM employees e
-            JOIN user_accounts u ON u.employee_id = e.employee_id
             WHERE e.employee_id = :id
         ");
         $stmt->execute(['id' => $doctorId]);
@@ -100,13 +99,15 @@ class Doctor extends Model {
         $stmt->execute(array_merge($personData, ['person_id' => $personId]));
 
         // Actualizar email en employees
-        $stmt = $this->db->prepare("
+        if ($email) {
+            $stmt = $this->db->prepare("
             UPDATE employees SET email = :email WHERE employee_id = :id
-        ");
-        $stmt->execute([
-            'email' => $personData['email'],
-            'id' => $doctorId
-        ]);
+            ");
+            $stmt->execute([
+                'email' => $email,
+                'id' => $doctorId
+            ]);
+        }
 
         // Actualizar doctor
         $stmt = $this->db->prepare("
@@ -121,5 +122,56 @@ class Doctor extends Model {
             ");
             $stmt->execute(['username' => $username, 'id' => $doctorId]);
         }
+    }
+
+    public function emailExists(string $email, ?int $excludeId = null): bool {
+        $query = "SELECT 1 FROM employees WHERE email = :email";
+        if ($excludeId) {
+            $query .= " AND employee_id != :id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':email', $email);
+        if ($excludeId) $stmt->bindValue(':id', $excludeId);
+        $stmt->execute();
+        return (bool) $stmt->fetch();
+    }
+
+    public function usernameExists(string $username, ?int $excludeId = null): bool {
+        $query = "SELECT 1 FROM user_accounts WHERE username = :username";
+        if ($excludeId) {
+            $query .= " AND employee_id != :id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':username', $username);
+        if ($excludeId) $stmt->bindValue(':id', $excludeId);
+        $stmt->execute();
+        return (bool) $stmt->fetch();
+    }
+
+    public function dniExists(string $dni, ?int $excludeId = null): bool {
+        $query = "
+            SELECT 1 FROM persons p
+            JOIN employees e ON p.person_id = e.person_id
+            WHERE p.dni = :dni";
+        if ($excludeId) {
+            $query .= " AND e.employee_id != :id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':dni', $dni);
+        if ($excludeId) $stmt->bindValue(':id', $excludeId);
+        $stmt->execute();
+        return (bool) $stmt->fetch();
+    }
+
+    public function licenseExists(string $license, ?int $excludeId = null): bool {
+        $query = "SELECT 1 FROM doctors WHERE license_no = :license_no";
+        if ($excludeId) {
+            $query .= " AND doctor_id != :id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':license_no', $license);
+        if ($excludeId) $stmt->bindValue(':id', $excludeId);
+        $stmt->execute();
+        return (bool) $stmt->fetch();
     }
 }

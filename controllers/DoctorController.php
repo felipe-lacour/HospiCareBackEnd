@@ -67,11 +67,22 @@ class DoctorController extends Controller {
                 'specialty' => $body['specialty']
             ];
 
+            // Validar unicidad de datos
+            if ($this->doctorModel->emailExists($body['email'])) {
+                return $this->json(['error' => 'Email already exists'], 400);
+            }
+            if ($this->doctorModel->dniExists($body['dni'])) {
+                return $this->json(['error' => 'DNI already exists'], 400);
+            }
+            if ($this->doctorModel->licenseExists($body['license_no'])) {
+                return $this->json(['error' => 'License number already exists'], 400);
+            }
+
             $result = $this->doctorModel->createDoctor($personData, $doctorData);
 
             $this->json([
                 'success' => true,
-                'employee_id' => $result['employee_id'],
+                'doctor_id' => $result['employee_id'],
                 'username' => $result['username'],
                 'setup_link' => $result['setup_link']
             ]);
@@ -121,8 +132,7 @@ class DoctorController extends Controller {
                 'first_name' => $body['first_name'],
                 'last_name' => $body['last_name'],
                 'address' => $body['address'],
-                'phone' => $body['phone'],
-                'email' => $body['email']
+                'phone' => $body['phone']
             ];
 
             $doctorData = [
@@ -130,9 +140,21 @@ class DoctorController extends Controller {
                 'specialty' => $body['specialty']
             ];
 
+            $email = $body['email'] ?? null;
+
             $username = $body['username'] ?? null;
 
-            $this->doctorModel->updateDoctor($doctorId, $personData, $doctorData, $username);
+            if ($this->doctorModel->emailExists($body['email'], $doctorId)) {
+                return $this->json(['error' => 'Email already exists'], 400);
+            }
+            if ($this->doctorModel->usernameExists($body['username'], $doctorId)) {
+                return $this->json(['error' => 'Username already exists'], 400);
+            }
+            if ($this->doctorModel->licenseExists($body['license_no'], $doctorId)) {
+                return $this->json(['error' => 'License number already exists'], 400);
+            }
+
+            $this->doctorModel->updateDoctor($doctorId, $personData, $doctorData, $email, $username);
             $this->json(['success' => true]);
         } catch (\Exception $e) {
             $this->json(['error' => $e->getMessage()], 500);
