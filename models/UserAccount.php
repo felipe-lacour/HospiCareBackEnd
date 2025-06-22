@@ -84,4 +84,16 @@ class UserAccount extends Model {
             'setup_link' => "http://localhost:8000/auth/set-password?token=$token"
         ];
     }
+
+    public function usernameExists(string $username, ?int $excludeId = null): bool {
+        $query = "SELECT 1 FROM user_accounts WHERE username = :username";
+        if ($excludeId) {
+            $query .= " AND employee_id != :id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':username', $username);
+        if ($excludeId) $stmt->bindValue(':id', $excludeId);
+        $stmt->execute();
+        return (bool) $stmt->fetch();
+    }
 }

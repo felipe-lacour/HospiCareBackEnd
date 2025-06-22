@@ -105,4 +105,54 @@ class Employee extends Model {
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    public function update(int $employeeId, array $personData, ?string $email = null, ?string $username = null): void {
+        // Obtener person_id
+        $stmt = $this->db->prepare("SELECT person_id FROM employees WHERE employee_id = :id");
+        $stmt->execute(['id' => $employeeId]);
+        $row = $stmt->fetch();
+
+        if (!$row) {
+            throw new \Exception("Employee not found.");
+        }
+
+        $personId = $row['person_id'];
+
+        // Actualizar datos en 'persons'
+        if (!empty($personData)) {
+            $fields = [];
+            foreach ($personData as $key => $value) {
+                $fields[] = "$key = :$key";
+            }
+
+            $stmt = $this->db->prepare("
+                UPDATE persons SET " . implode(', ', $fields) . " WHERE person_id = :person_id
+            ");
+            $stmt->execute(array_merge($personData, ['person_id' => $personId]));
+        }
+
+        // Actualizar email en 'employees'
+        if ($email) {
+            $stmt = $this->db->prepare("UPDATE employees SET email = :email WHERE employee_id = :id");
+            $stmt->execute(['email' => $email, 'id' => $employeeId]);
+        }
+
+        // Actualizar username en 'user_accounts'
+        if ($username) {
+            $stmt = $this->db->prepare("UPDATE user_accounts SET username = :username WHERE employee_id = :id");
+            $stmt->execute(['username' => $username, 'id' => $employeeId]);
+        }
+    }
+
+    public function emailExists(string $email, ?int $excludeId = null): bool {
+        $query = "SELECT 1 FROM employees WHERE email = :email";
+        if ($excludeId) {
+            $query .= " AND employee_id != :id";
+        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':email', $email);
+        if ($excludeId) $stmt->bindValue(':id', $excludeId);
+        $stmt->execute();
+        return (bool) $stmt->fetch();
+    }
 }

@@ -4,6 +4,9 @@ namespace controllers;
 
 use core\Controller;
 use models\Doctor;
+use models\Employee;
+use models\Person;
+use models\UserAccount;
 use models\AuthToken;
 
 class DoctorController extends Controller {
@@ -64,10 +67,12 @@ class DoctorController extends Controller {
             ];
 
             // Validar unicidad de datos
-            if ($this->doctorModel->emailExists($body['email'])) {
+            $employeeModel = new Employee();
+            if ($employeeModel->emailExists($body['email'])) {
                 return $this->json(['error' => 'Email already exists'], 400);
             }
-            if ($this->doctorModel->dniExists($body['dni'])) {
+            $personModel = new Person();
+            if ($personModel->dniExists($body['dni'])) {
                 return $this->json(['error' => 'DNI already exists'], 400);
             }
             if ($this->doctorModel->licenseExists($body['license_no'])) {
@@ -137,13 +142,14 @@ class DoctorController extends Controller {
             ];
 
             $email = $body['email'] ?? null;
-
             $username = $body['username'] ?? null;
 
-            if ($this->doctorModel->emailExists($body['email'], $doctorId)) {
+            $employeeModel = new Employee();
+            if ($employeeModel->emailExists($body['email'], $doctorId)) {
                 return $this->json(['error' => 'Email already exists'], 400);
             }
-            if ($this->doctorModel->usernameExists($body['username'], $doctorId)) {
+            $userModel = new UserAccount();
+            if ($userModel->usernameExists($body['username'], $doctorId)) {
                 return $this->json(['error' => 'Username already exists'], 400);
             }
             if ($this->doctorModel->licenseExists($body['license_no'], $doctorId)) {
