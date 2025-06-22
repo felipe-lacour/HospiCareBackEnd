@@ -32,8 +32,11 @@ class Employee extends Model {
 
     public function getById(int $id): array|false {
         $stmt = $this->db->prepare("
-            SELECT * FROM {$this->table}
-            WHERE employee_id = :id
+            SELECT e.*, p.first_name, p.last_name, p.dni, p.birth_date, p.address, p.phone, u.username
+            FROM employees e
+            JOIN persons p ON e.person_id = p.person_id
+            LEFT JOIN user_accounts u ON u.employee_id = e.employee_id
+            WHERE e.employee_id = :id
         ");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
@@ -90,5 +93,16 @@ class Employee extends Model {
             'username' => $username,
             'setup_link' => $setupLink
         ];
+    }
+
+    public function getAllNonDoctorsEmployees(): array {
+        $stmt = $this->db->prepare("
+            SELECT e.*, p.first_name, p.last_name, p.dni, p.birth_date, p.address, p.phone
+            FROM employees e
+            JOIN persons p ON e.person_id = p.person_id
+            WHERE e.employee_id NOT IN (SELECT doctor_id FROM doctors)
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 }

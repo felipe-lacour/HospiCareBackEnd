@@ -83,6 +83,9 @@ $router->post('/auth/login', [AuthController::class, 'login']);
 // chequear procedimientos de autenticacion y roles
 
 $router->post('/employee/store', [EmployeeController::class, 'store']);
+$router->get('/employee/show', [EmployeeController::class, 'show']);
+$router->get('/employee/update', [EmployeeController::class, 'update']);
+$router->get('/employees', [EmployeeController::class, 'index']);
 
 // === Routing Dispatcher ===
 $basePath = '/HospiCareDev/BACKEND/public';

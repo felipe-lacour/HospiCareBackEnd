@@ -31,10 +31,6 @@ class DoctorController extends Controller {
 
         $doctor = $this->doctorModel->getDoctorById($id);
 
-        if ($user['role_id'] == 2 && $doctor && $doctor['doctor_id'] != $user['employee_id']) {
-            return $this->json(['error' => 'Access denied'], 403);
-        }
-
         if ($doctor) {
             $this->json($doctor);
         } else {
@@ -45,7 +41,7 @@ class DoctorController extends Controller {
     public function store() {
         $user = $this->getAuthenticatedUser();
         if (!$user || $user['role_id'] != 1) {
-            return $this->json(['error' => 'Only admins can create doctors'], 403);
+            return $this->json(['error' => 'Only admins can add doctors'], 403);
         }
 
         $body = json_decode(file_get_contents('php://input'), true);
