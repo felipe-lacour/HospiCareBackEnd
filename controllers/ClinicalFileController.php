@@ -151,6 +151,24 @@ class ClinicalFileController extends Controller {
 
         return $this->json(['error' => 'Access denied'], 403);
     }
+
+    /**
+ * DELETE /clinical-files/notes?id=NOTE_ID
+ */
+public function deleteNote() {
+    $user = $this->getCurrentUser();
+    if (!$user || ((int)$user['role_id'] !== 1 && (int)$user['role_id'] !== 2)) {
+        return $this->json(['error' => 'Access denied'], 403);
+    }
+
+    $noteId = $_GET['id'] ?? null;
+    if (!$noteId) {
+        return $this->json(['error' => 'Missing note ID'], 400);
+    }
+
+    $deleted = $this->noteModel->deleteById((int)$noteId);
+    return $this->json(['success' => $deleted], $deleted ? 200 : 404);
+}
 }
 
 

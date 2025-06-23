@@ -46,6 +46,21 @@ class Patient extends Person {
         return $stmt->fetch();
     }
 
+public function getPatientByMRN(string $medicalRecNo) {
+    $stmt = $this->db->prepare("
+        SELECT 
+            p.*,
+            pat.patient_id,
+            pat.medical_rec_no,
+            pat.blood_type
+        FROM patients pat
+        JOIN persons p ON pat.patient_id = p.person_id
+        WHERE pat.medical_rec_no = :mrn
+    ");
+    $stmt->execute(['mrn' => $medicalRecNo]);
+    return $stmt->fetch();
+}
+
     public function updatePatient($id, array $data) {
     unset($data['dni'], $data['medical_rec_no']);
 

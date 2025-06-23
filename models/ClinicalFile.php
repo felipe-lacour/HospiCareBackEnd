@@ -3,7 +3,7 @@
 namespace models;
 
 use core\Model;
-
+use models\Patient;
 class ClinicalFile extends Model {
     protected $table = 'clinical_files';
 
@@ -15,13 +15,33 @@ class ClinicalFile extends Model {
     }
 
 
-    public function getByMRN(string $medicalRecNo) {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM {$this->table} WHERE medical_rec_no = :mrn"
-        );
-        $stmt->execute(['mrn' => $medicalRecNo]);
-        return $stmt->fetch();
-    }
+public function getByMRN(string $medicalRecNo) {
+    // Obtener la historia clínica
+    $stmt = $this->db->prepare(
+        "SELECT * FROM {$this->table} WHERE medical_rec_no = :mrn"
+    );
+    $stmt->execute(['mrn' => $medicalRecNo]);
+    $clinicalFile = $stmt->fetch();
+
+    if (!$clinicalFile) return null;
+
+    // Obtener las notas de consulta asociadas
+    $notesStmt = $this->db->prepare(
+        "SELECT * FROM consult_notes WHERE medical_rec_no = :mrn ORDER BY time DESC"
+    );
+    $notesStmt->execute(['mrn' => $medicalRecNo]);
+    $notes = $notesStmt->fetchAll();
+
+    // Obtener datos del paciente desde el modelo Patient
+    $patientModel = new Patient();
+    $patient = $patientModel->getPatientByMRN($medicalRecNo);
+
+    // Agregar info combinada
+    $clinicalFile['consult_notes'] = $notes;
+    $clinicalFile['patient'] = $patient;
+
+    return $clinicalFile;
+}
 
 
     public function create(string $medicalRecNo): string {

@@ -62,6 +62,7 @@ $router->get('/clinical/notes', [ClinicalFileController::class, 'notes']);
 $router->post('/clinical/notes/add', [ClinicalFileController::class, 'addNote']);
 $router->get('/clinical/notes/all', [ClinicalFileController::class, 'allNotes']);
 $router->post('/clinical/notes/update', [ClinicalFileController::class, 'updateNote']);
+$router->get('/clinical/notes/delete', [ClinicalFileController::class, 'deleteNote']);
 
 // chequear flujos de trabajo de clinical files y notas
 
