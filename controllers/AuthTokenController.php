@@ -12,11 +12,12 @@ class AuthTokenController extends Controller {
 
     public function __construct() {
         $headers = getallheaders();
-        $this->token = $headers['Authorization'] ?? null;
+        $authHeader = $headers['Authorization'] ?? '';
+        $this->token = substr($authHeader, 7);
 
         if ($this->token) {
-            $authTokenModel = new AuthToken();
-            $this->authUser = $authTokenModel->getUserByToken($this->token);
+            $tokenModel = new AuthToken();
+            $this->authUser = $tokenModel->getUserByToken($this->token);
         }
     }
 

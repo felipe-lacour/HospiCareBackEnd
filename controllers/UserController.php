@@ -12,11 +12,24 @@ class UserController extends Controller {
 
     public function __construct() {
         $headers = getallheaders();
-        $this->token = $headers['Authorization'] ?? null;
+        $authHeader = $headers['Authorization'] ?? '';
 
+        if (!str_starts_with($authHeader, 'Bearer ')) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Missing or invalid token header']);
+            exit;
+        }
+
+        $this->token = substr($authHeader, 7);
         if ($this->token) {
             $tokenModel = new AuthToken();
             $this->authUser = $tokenModel->getUserByToken($this->token);
+        }
+
+        if (!$this->authUser) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid or expired token']);
+            exit;
         }
     }
 
@@ -62,12 +75,46 @@ class UserController extends Controller {
         return $this->json(['success' => true]);
     }
 
-    public function me() {
+    public function pass() {
         if (!$this->authUser) {
-            return $this->json(['error' => 'Invalid or expired token'], 401);
+            return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        return $this->json(['user' => $this->authUser]);
+        $body = json_decode(file_get_contents('php://input'), true);
+
+        if (!isset($body['employee_id'])) {
+            return $this->json(['error' => 'Missing employee_id'], 400);
+        }
+
+        $employeeId = (int) $body['employee_id'];
+
+        // Asegurarse que el empleado que quiere modificar la contraseña es él mismo
+        if ((int)$this->authUser['employee_id'] !== $employeeId) {
+            return $this->json(['error' => 'You can only update your own password'], 403);
+        }
+
+        // Validar campos requeridos
+        if (empty($body['current_password']) || empty($body['new_password'])) {
+            return $this->json(['error' => 'Current and new passwords are required'], 400);
+        }
+
+        if (strlen($body['new_password']) < 6) {
+            return $this->json(['error' => 'New password must be at least 6 characters long'], 400);
+        }
+
+        // Verificar contraseña actual
+        $userModel = new UserAccount();
+        $user = $userModel->findByUsername($this->authUser['username']);
+
+        if (!$user || !password_verify($body['current_password'], $user['pwd_hash'])) {
+            return $this->json(['error' => 'Current password is incorrect'], 403);
+        }
+
+        // Guardar nueva contraseña hasheada
+        $hashedPassword = password_hash($body['new_password'], PASSWORD_BCRYPT);
+        $userModel->setPassword($employeeId, $hashedPassword);
+
+        return $this->json(['success' => true]);
     }
 
     public function index() {

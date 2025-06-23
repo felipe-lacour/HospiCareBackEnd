@@ -124,6 +124,65 @@ class EmployeeController extends Controller {
             $this->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function change() {
+        $user = $this->getAuthenticatedUser();
+        if (!$user) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!isset($body['employee_id'])) {
+            return $this->json(['error' => 'Missing employee_id'], 400);
+        }
+
+        $employeeId = (int) $body['employee_id'];
+
+        // Solo puede cambiar su propio perfil
+        if ((int)$user['employee_id'] !== $employeeId) {
+            return $this->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $required = ['address', 'phone', 'email', 'username'];
+        foreach ($required as $field) {
+            if (empty($body[$field])) {
+                return $this->json(['error' => "Missing field: $field"], 400);
+            }
+        }
+
+        try {
+            $personData = [
+                'address' => $body['address'],
+                'phone' => $body['phone'],
+            ];
+
+            $email = $body['email'];
+            $username = $body['username'];
+
+            if ($this->employeeModel->emailExists($email, $employeeId)) {
+                return $this->json(['error' => 'Email already exists'], 400);
+            }
+            $userModel = new \models\UserAccount();
+            if ($userModel->usernameExists($username, $employeeId)) {
+                return $this->json(['error' => 'Username already exists'], 400);
+            }
+
+            // Actualizar datos
+            $this->employeeModel->update($employeeId, $personData, $email, $username);
+
+            // Devolver nuevo usuario para frontend
+            return $this->json([
+                'success' => true,
+                'user' => [
+                    'username' => $username,
+                    'role_id' => $user['role_id'],
+                    'employee_id' => $employeeId
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
     
     private function getAuthenticatedUser(): ?array {
         $headers = getallheaders();

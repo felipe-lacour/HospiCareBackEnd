@@ -97,4 +97,12 @@ class AuthController extends Controller {
             ]
         ]);
     }
+
+    public function logout() {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? '';
+        $token = substr($authHeader, 7);
+        $tokenModel = new AuthToken();
+        $tokenModel->invalidateToken($token);
+    }
 }

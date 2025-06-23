@@ -50,6 +50,14 @@ class DoctorController extends Controller {
         $body = json_decode(file_get_contents('php://input'), true);
         if (!$body) return $this->json(['error' => 'Invalid JSON'], 400);
 
+        // Expected fields
+        $required = ['first_name', 'last_name', 'dni', 'birth_date', 'address', 'phone', 'email', 'license_no', 'specialty'];
+        foreach ($required as $field) {
+            if (empty($body[$field])) {
+                return $this->json(['error' => "Missing field: $field"], 400);
+            }
+        }
+
         try {
             $personData = [
                 'dni' => $body['dni'],
@@ -124,6 +132,13 @@ class DoctorController extends Controller {
         $body = json_decode(file_get_contents('php://input'), true);
         if (!$body || !isset($body['doctor_id'])) {
             return $this->json(['error' => 'Invalid input'], 400);
+        }
+
+        $required = ['first_name', 'last_name', 'address', 'phone', 'email', 'license_no', 'specialty', 'username'];
+        foreach ($required as $field) {
+            if (empty($body[$field])) {
+                return $this->json(['error' => "Missing field: $field"], 400);
+            }
         }
 
         try {

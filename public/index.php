@@ -23,6 +23,7 @@ use controllers\AppointmentController;
 use controllers\ClinicalFileController;
 use controllers\PrescriptionController;
 use controllers\AuthController;
+use controllers\UserController;
 use controllers\AuthTokenController;
 use controllers\EmployeeController;
 
@@ -74,17 +75,20 @@ $router->post('/prescriptions/additem', [PrescriptionController::class, 'addItem
 $router->get('/prescriptions/delete', [PrescriptionController::class, 'delete']);
 
 // revisar si hay algo raro
+// chequear procedimientos de autenticacion y roles
 
 // === Authentication ===
 $router->post('/auth/send-link', [AuthController::class, 'sendPasswordSetupLink']);
 $router->post('/auth/set-password', [AuthController::class, 'setPassword']);
 $router->post('/auth/login', [AuthController::class, 'login']);
+$router->post('/auth/logout', [AuthController::class, 'logout']);
 
-// chequear procedimientos de autenticacion y roles
+$router->post('/user/pass', [UserController::class, 'pass']);
 
 $router->post('/employee/store', [EmployeeController::class, 'store']);
 $router->get('/employee/show', [EmployeeController::class, 'show']);
 $router->post('/employee/update', [EmployeeController::class, 'update']);
+$router->post('/employee/change', [EmployeeController::class, 'change']);
 $router->get('/employees', [EmployeeController::class, 'index']);
 
 // === Routing Dispatcher ===
