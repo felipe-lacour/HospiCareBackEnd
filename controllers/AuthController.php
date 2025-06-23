@@ -50,7 +50,7 @@ class AuthController extends Controller {
         $psrModel = new PasswordSetRequest();
         $request = $psrModel->getByToken($token);
 
-        if (!$request) {
+        if (!$request || $request['used']) {
             return $this->json(['error' => 'Invalid or expired token'], 400);
         }
 
