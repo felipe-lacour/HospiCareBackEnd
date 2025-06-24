@@ -177,4 +177,25 @@ class DoctorController extends Controller {
             $this->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function employment() {
+        $user = $this->getAuthenticatedUser();
+        if (!$user || $user['role_id'] != 1) {
+            return $this->json(['error' => 'Only admins can change doctors status'], 403);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $doctorId = $input['doctor_id'] ?? null;
+        $employed = $input['employed'] ?? null;
+
+        if (!$doctorId || !isset($employed)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing parameters']);
+            return;
+        }
+
+        $doctorModel = new Doctor();
+        $success = $doctorModel->updateEmployment($doctorId, $employed);
+        echo json_encode(['success' => $success]);
+    }
 }

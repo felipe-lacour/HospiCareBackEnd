@@ -135,4 +135,12 @@ class Doctor extends Model {
         $stmt->execute();
         return (bool) $stmt->fetch();
     }
+
+    public function updateEmployment($doctorId, $employed): bool {
+        $stmt = $this->db->prepare("UPDATE doctors SET employed = :employed WHERE doctor_id = :doctor_id");
+        return $stmt->execute([
+            'employed' => (int)$employed,
+            'doctor_id' => $doctorId
+        ]);
+    }
 }

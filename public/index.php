@@ -45,6 +45,7 @@ $router->get('/doctors', [DoctorController::class, 'index']);
 $router->get('/doctors/show', [DoctorController::class, 'show']);
 $router->post('/doctors/store', [DoctorController::class, 'store']);
 $router->post('/doctors/update', [DoctorController::class, 'update']);
+$router->post('/doctors/employment', [DoctorController::class, 'employment']);
 
 // agregar ruta para editar doctor y para eliminar doctor
 
@@ -89,6 +90,7 @@ $router->post('/employee/store', [EmployeeController::class, 'store']);
 $router->get('/employee/show', [EmployeeController::class, 'show']);
 $router->post('/employee/update', [EmployeeController::class, 'update']);
 $router->post('/employee/change', [EmployeeController::class, 'change']);
+$router->post('/employee/delete', [EmployeeController::class, 'delete']);
 $router->get('/employees', [EmployeeController::class, 'index']);
 
 // === Routing Dispatcher ===

@@ -206,4 +206,25 @@ class EmployeeController extends Controller {
         
         return $userData;
     }
+
+    public function delete() {
+        $user = $this->getAuthenticatedUser();
+        if (!$user || $user['role_id'] != 1) {
+            return $this->json(['error' => 'Only admins can delete employees'], 403);
+        }
+
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!$body || !isset($body['employee_id'])) {
+            return $this->json(['error' => 'Invalid input'], 400);
+        }
+
+        try {
+            $employeeId = (int)$body['employee_id'];
+
+            $this->employeeModel->delete($employeeId);
+            $this->json(['success' => true]);
+        } catch (\Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

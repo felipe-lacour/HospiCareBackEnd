@@ -155,4 +155,9 @@ class Employee extends Model {
         $stmt->execute();
         return (bool) $stmt->fetch();
     }
+
+    public function delete(int $employeeId): void {
+        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE employee_id = :id");
+        $stmt->execute(['id' => $employeeId]);
+    }
 }
