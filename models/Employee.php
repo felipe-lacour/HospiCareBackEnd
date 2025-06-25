@@ -85,7 +85,7 @@ class Employee extends Model {
         $psrModel = new PasswordSetRequest();
         $psrModel->createToken($employeeId, $token);
 
-        $setupLink = "http://localhost:8000/#auth/set-password?token=$token";
+        $setupLink = "http://localhost:5500/#auth/set-password?token=$token";
 
         return [
             'employee_id' => $employeeId,

@@ -81,7 +81,7 @@ class UserAccount extends Model {
 
         return [
             'username' => $username,
-            'setup_link' => "http://localhost:8000/auth/set-password?token=$token"
+            'setup_link' => "http://localhost:5500/auth/set-password?token=$token"
         ];
     }
 

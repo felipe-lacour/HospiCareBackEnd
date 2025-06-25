@@ -4,6 +4,7 @@ namespace controllers;
 
 use core\Controller;
 use models\UserAccount;
+use models\Doctor;
 use models\PasswordSetRequest;
 use models\AuthToken;
 
@@ -22,7 +23,7 @@ class AuthController extends Controller {
         $psrModel = new PasswordSetRequest();
         $psrModel->createToken($employeeId, $token);
 
-        $link = "http://localhost:8000/auth/set-password?token=$token";
+        $link = "http://localhost:5500/auth/set-password?token=$token";
 
         return $this->json([
             'success' => true,
@@ -74,6 +75,12 @@ class AuthController extends Controller {
 
         if (!$user || !password_verify($data['password'], $user['pwd_hash'])) {
             return $this->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        $docModel = new Doctor();
+        $doc = $docModel->getDoctorById($user['employee_id']);
+        if (!$doc['employed']) {
+            return $this->json(['error' => 'Your access has been revoked, please contact an admin'], 401);
         }
 
         $tokenModel = new AuthToken();

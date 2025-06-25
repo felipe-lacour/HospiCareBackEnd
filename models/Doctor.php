@@ -50,7 +50,7 @@ class Doctor extends Model {
     }
 
     public function sendPasswordSetupEmail(string $email, string $username, string $token): string {
-        return "http://localhost:8000/auth/set-password?token=$token";
+        return "http://localhost:5500/auth/set-password?token=$token";
     }
 
     public function getDoctorById(int $id): array|false {
