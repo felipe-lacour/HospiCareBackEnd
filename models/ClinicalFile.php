@@ -3,31 +3,61 @@
 namespace models;
 
 use core\Model;
-
+use models\Patient;
 class ClinicalFile extends Model {
     protected $table = 'clinical_files';
 
-    public function getAll() {
-        return $this->db->query("SELECT * FROM {$this->table}")->fetchAll();
+
+    public function getAll(): array {
+        return $this->db->query(
+            "SELECT * FROM {$this->table}"
+        )->fetchAll();
     }
 
-    public function getByPatientId($patientId) {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE patient_id = :pid");
-        $stmt->execute(['pid' => $patientId]);
-        return $stmt->fetch();
+
+public function getByMRN(string $medicalRecNo) {
+    // Obtener la historia clínica
+    $stmt = $this->db->prepare(
+        "SELECT * FROM {$this->table} WHERE medical_rec_no = :mrn"
+    );
+    $stmt->execute(['mrn' => $medicalRecNo]);
+    $clinicalFile = $stmt->fetch();
+
+    if (!$clinicalFile) return null;
+
+    // Obtener las notas de consulta asociadas
+    $notesStmt = $this->db->prepare(
+        "SELECT * FROM consult_notes WHERE medical_rec_no = :mrn ORDER BY time DESC"
+    );
+    $notesStmt->execute(['mrn' => $medicalRecNo]);
+    $notes = $notesStmt->fetchAll();
+
+    // Obtener datos del paciente desde el modelo Patient
+    $patientModel = new Patient();
+    $patient = $patientModel->getPatientByMRN($medicalRecNo);
+
+    // Agregar info combinada
+    $clinicalFile['consult_notes'] = $notes;
+    $clinicalFile['patient'] = $patient;
+
+    return $clinicalFile;
+}
+
+
+    public function create(string $medicalRecNo): string {
+        $stmt = $this->db->prepare(
+            "INSERT INTO {$this->table} (medical_rec_no, open_date)
+             VALUES (:mrn, CURDATE())"
+        );
+        $stmt->execute(['mrn' => $medicalRecNo]);
+        return $medicalRecNo;
     }
 
-    public function create($patientId) {
-        $stmt = $this->db->prepare("
-            INSERT INTO {$this->table} (patient_id, open_date)
-            VALUES (:pid, CURDATE())
-        ");
-        $stmt->execute(['pid' => $patientId]);
-        return $this->db->lastInsertId();
-    }
 
-    public function delete($fileId) {
-        return $this->db->prepare("DELETE FROM {$this->table} WHERE file_id = :id")
-            ->execute(['id' => $fileId]);
+    public function delete(string $medicalRecNo): bool {
+        $stmt = $this->db->prepare(
+            "DELETE FROM {$this->table} WHERE medical_rec_no = :mrn"
+        );
+        return $stmt->execute(['mrn' => $medicalRecNo]);
     }
 }

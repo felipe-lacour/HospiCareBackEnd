@@ -45,6 +45,57 @@ class Patient extends Person {
         $stmt->execute(['id' => $patientId]);
         return $stmt->fetch();
     }
+
+public function getPatientByMRN(string $medicalRecNo) {
+    $stmt = $this->db->prepare("
+        SELECT 
+            p.*,
+            pat.patient_id,
+            pat.medical_rec_no,
+            pat.blood_type
+        FROM patients pat
+        JOIN persons p ON pat.patient_id = p.person_id
+        WHERE pat.medical_rec_no = :mrn
+    ");
+    $stmt->execute(['mrn' => $medicalRecNo]);
+    return $stmt->fetch();
+}
+
+    public function updatePatient($id, array $data) {
+    unset($data['dni'], $data['medical_rec_no']);
+
+    // Actualizar tabla `persons`
+    $stmt1 = $this->db->prepare("
+        UPDATE persons SET
+            first_name = :first_name,
+            last_name = :last_name,
+            birth_date = :birth_date,
+            address = :address,
+            phone = :phone
+        WHERE person_id = :id
+    ");
+    $stmt1->execute([
+        'first_name' => $data['first_name'],
+        'last_name' => $data['last_name'],
+        'birth_date' => $data['birth_date'],
+        'address' => $data['address'],
+        'phone' => $data['phone'],
+        'id' => $id
+    ]);
+
+    // Actualizar tabla `patients`
+    $stmt2 = $this->db->prepare("
+        UPDATE {$this->patientTable} SET
+            blood_type = :blood_type
+        WHERE patient_id = :id
+    ");
+    $stmt2->execute([
+        'blood_type' => $data['blood_type'],
+        'id' => $id
+    ]);
+
+    return $stmt1->rowCount() > 0 || $stmt2->rowCount() > 0;
+}
     
     public function deletePatientById($id) {
     $stmt = $this->db->prepare("DELETE FROM patients WHERE patient_id = :id");
