@@ -15,7 +15,7 @@ class ClinicalFile extends Model {
     }
 
 
-public function getByMRN(string $medicalRecNo) {
+public function getByMRN(string $medicalRecNo, int $role) {
     // Obtener la historia clínica
     $stmt = $this->db->prepare(
         "SELECT * FROM {$this->table} WHERE medical_rec_no = :mrn"
@@ -25,19 +25,21 @@ public function getByMRN(string $medicalRecNo) {
 
     if (!$clinicalFile) return null;
 
-    // Obtener las notas de consulta asociadas
-    $notesStmt = $this->db->prepare(
-        "SELECT * FROM consult_notes WHERE medical_rec_no = :mrn ORDER BY time DESC"
-    );
-    $notesStmt->execute(['mrn' => $medicalRecNo]);
-    $notes = $notesStmt->fetchAll();
+    if($role == 2 || $role == 1){
+        $notesStmt = $this->db->prepare(
+            "SELECT * FROM consult_notes WHERE medical_rec_no = :mrn ORDER BY time DESC"
+        );
+        $notesStmt->execute(['mrn' => $medicalRecNo]);
+        $notes = $notesStmt->fetchAll();
+
+        $clinicalFile['consult_notes'] = $notes;
+    }
 
     // Obtener datos del paciente desde el modelo Patient
     $patientModel = new Patient();
     $patient = $patientModel->getPatientByMRN($medicalRecNo);
 
     // Agregar info combinada
-    $clinicalFile['consult_notes'] = $notes;
     $clinicalFile['patient'] = $patient;
 
     return $clinicalFile;

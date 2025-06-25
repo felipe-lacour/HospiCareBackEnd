@@ -46,16 +46,15 @@ class ClinicalFileController extends Controller {
      */
     public function show() {
         $user = $this->getCurrentUser();
-        if (!$user || ((int)$user['role_id'] !== 1 && (int)$user['role_id'] !== 2)) {
-            return $this->json(['error' => 'Access denied'], 403);
-        }
+
+
 
         $mrn  = $_GET['medical_rec_no'] ?? null;
         if (!$mrn) {
             return $this->json(['error' => 'Missing medical_rec_no'], 400);
         }
 
-        $file = $this->cfModel->getByMRN($mrn);
+        $file = $this->cfModel->getByMRN($mrn, $user['role_id']);
         return $this->json($file ?: ['error' => 'Not found'], $file ? 200 : 404);
     }
 
@@ -101,24 +100,40 @@ class ClinicalFileController extends Controller {
      * POST /clinical-files/notes
      * Body JSON: { "medical_rec_no": ..., "text": "..." }
      */
-    public function addNote() {
-        $user = $this->getCurrentUser();
-        if ($user['role_id'] !== 2 && $user['role_id'] !== 1) {
-            return $this->json(['error' => 'Only doctors can add notes'], 403);
-        }
-
-        $body = json_decode(file_get_contents('php://input'), true);
-        if (!$body || !isset($body['medical_rec_no'], $body['text'])) {
-            return $this->json(['error' => 'Missing fields'], 400);
-        }
-
-        $id = $this->noteModel->createByMRN(
-            $body['medical_rec_no'],
-            $user['employee_id'],
-            $body['text']
-        );
-        return $this->json(['success' => true, 'note_id' => $id], 201);
+public function addNote() {
+    $user = $this->getCurrentUser();
+    // only doctors (2) and admins (1) can add
+    if ($user['role_id'] !== 2 && $user['role_id'] !== 1) {
+        return $this->json(['error' => 'Only doctors or admins can add notes'], 403);
     }
+
+    $body = json_decode(file_get_contents('php://input'), true);
+    if (!$body || !isset($body['medical_rec_no'], $body['text'])) {
+        return $this->json(['error' => 'Missing fields'], 400);
+    }
+
+    // 1) Determine which doctor_id to use:
+    if ((int)$user['role_id'] === 2) {
+        // doctors may only add under their own ID
+        $doctorId = $user['employee_id'];
+    } else {
+        // admin must explicitly specify a valid doctor_id
+        if (empty($body['doctor_id'])) {
+            return $this->json(['error' => 'Missing doctor_id'], 400);
+        }
+        $doctorId = (int)$body['doctor_id'];
+        // you could also verify it exists:
+        // if (!$this->noteModel->doctorExists($doctorId)) { … }
+    }
+
+    $noteId = $this->noteModel->createByMRN(
+        $body['medical_rec_no'],
+        $doctorId,
+        $body['text']
+    );
+
+    return $this->json(['success' => true, 'note_id' => $noteId], 201);
+}
 
     /**
      * GET /clinical-files/all-notes
