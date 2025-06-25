@@ -21,6 +21,16 @@ class DoctorController extends Controller {
         if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
 
         // All roles can view the list of doctors
+        if ((int)$user['role_id'] === 2) {
+            // If the user is a doctor, return only their own data
+            $doctor = $this->doctorModel->getDoctorById($user['employee_id']);
+            if ($doctor) {
+                $this->json($doctor);
+            } else {
+                $this->json(['error' => 'Doctor not found'], 404);
+            }
+            return;
+        }
         $doctors = $this->doctorModel->getAllDoctors();
         $this->json($doctors);
     }
@@ -32,6 +42,11 @@ class DoctorController extends Controller {
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['error' => 'Missing doctor ID'], 400);
 
+        // If the user is a doctor, they can only view their own data
+        if ((int)$user['role_id'] === 2 && (int)$user['employee_id'] !== (int)$id) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+        
         $doctor = $this->doctorModel->getDoctorById($id);
 
         if ($doctor) {

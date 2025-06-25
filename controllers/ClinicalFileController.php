@@ -46,6 +46,10 @@ class ClinicalFileController extends Controller {
      */
     public function show() {
         $user = $this->getCurrentUser();
+        if (!$user || ((int)$user['role_id'] !== 1 && (int)$user['role_id'] !== 2)) {
+            return $this->json(['error' => 'Access denied'], 403);
+        }
+
         $mrn  = $_GET['medical_rec_no'] ?? null;
         if (!$mrn) {
             return $this->json(['error' => 'Missing medical_rec_no'], 400);
@@ -61,7 +65,7 @@ class ClinicalFileController extends Controller {
      */
     public function store() {
         $user = $this->getCurrentUser();
-        if ($user['role_id'] !== 3 && $user['role_id'] !== 1) {
+        if ($user['role_id'] !== 2 && $user['role_id'] !== 1) {
             return $this->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -80,6 +84,10 @@ class ClinicalFileController extends Controller {
      */
     public function notes() {
         $user = $this->getCurrentUser();
+        if (!$user || ((int)$user['role_id'] !== 1 && (int)$user['role_id'] !== 2)) {
+            return $this->json(['error' => 'Access denied'], 403);
+        }
+
         $mrn  = $_GET['medical_rec_no'] ?? null;
         if (!$mrn) {
             return $this->json(['error' => 'Missing medical_rec_no'], 400);
@@ -121,9 +129,11 @@ class ClinicalFileController extends Controller {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
-        if ((int)$user['role_id'] === 1) {
+        if ((int)$user['role_id'] === 1 || (int)$user['role_id'] === 2) {
             $notes = $this->noteModel->getAllWithDetails();
             return $this->json($notes, 200);
+        } else {
+            return $this->json([], 200);
         }
 
         return $this->json(['error' => 'Access denied'], 403);
