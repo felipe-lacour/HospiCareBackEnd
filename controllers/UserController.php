@@ -88,12 +88,10 @@ class UserController extends Controller {
 
         $employeeId = (int) $body['employee_id'];
 
-        // Asegurarse que el empleado que quiere modificar la contraseña es él mismo
         if ((int)$this->authUser['employee_id'] !== $employeeId) {
             return $this->json(['error' => 'You can only update your own password'], 403);
         }
 
-        // Validar campos requeridos
         if (empty($body['current_password']) || empty($body['new_password'])) {
             return $this->json(['error' => 'Current and new passwords are required'], 400);
         }
@@ -102,7 +100,6 @@ class UserController extends Controller {
             return $this->json(['error' => 'New password must be at least 6 characters long'], 400);
         }
 
-        // Verificar contraseña actual
         $userModel = new UserAccount();
         $user = $userModel->findByUsername($this->authUser['username']);
 
@@ -110,7 +107,6 @@ class UserController extends Controller {
             return $this->json(['error' => 'Current password is incorrect'], 403);
         }
 
-        // Guardar nueva contraseña hasheada
         $hashedPassword = password_hash($body['new_password'], PASSWORD_BCRYPT);
         $userModel->setPassword($employeeId, $hashedPassword);
 

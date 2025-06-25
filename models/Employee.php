@@ -11,7 +11,6 @@ class Employee extends Model {
     protected string $table = 'employees';
 
     public function create(array $data): int {
-        // Optional safety check
         if (!isset($data['person_id'], $data['email'], $data['hire_date'])) {
             throw new \Exception("Missing required fields for employee creation.");
         }
@@ -43,11 +42,9 @@ class Employee extends Model {
     }
 
     public function createWithAccount(array $personData, int $roleId): array {
-        // 1. Create person
         $personModel = new Person();
         $personId = $personModel->create($personData);
 
-        // 2. Create employee
         $email = $personData['email'] ?? null;
         if (!$email) {
             throw new \Exception("Email is required to create employee.");
@@ -65,7 +62,6 @@ class Employee extends Model {
         ]);
         $employeeId = (int) $this->db->lastInsertId();
 
-        // 3. Create user account (username = email)
         $username = $email;
         $userModel = new UserAccount();
         if ($userModel->findByUsername($username)) {
@@ -80,7 +76,6 @@ class Employee extends Model {
             'pwd_hash' => $placeholderPassword
         ]);
 
-        // 4. Create password setup token
         $token = bin2hex(random_bytes(32));
         $psrModel = new PasswordSetRequest();
         $psrModel->createToken($employeeId, $token);
@@ -111,7 +106,6 @@ class Employee extends Model {
     }
 
     public function update(int $employeeId, array $personData, ?string $email = null, ?string $username = null): void {
-        // Obtener person_id
         $stmt = $this->db->prepare("SELECT person_id FROM employees WHERE employee_id = :id");
         $stmt->execute(['id' => $employeeId]);
         $row = $stmt->fetch();
@@ -122,7 +116,6 @@ class Employee extends Model {
 
         $personId = $row['person_id'];
 
-        // Actualizar datos en 'persons'
         if (!empty($personData)) {
             $fields = [];
             foreach ($personData as $key => $value) {
@@ -135,13 +128,11 @@ class Employee extends Model {
             $stmt->execute(array_merge($personData, ['person_id' => $personId]));
         }
 
-        // Actualizar email en 'employees'
         if ($email) {
             $stmt = $this->db->prepare("UPDATE employees SET email = :email WHERE employee_id = :id");
             $stmt->execute(['email' => $email, 'id' => $employeeId]);
         }
 
-        // Actualizar username en 'user_accounts'
         if ($username) {
             $stmt = $this->db->prepare("UPDATE user_accounts SET username = :username WHERE employee_id = :id");
             $stmt->execute(['username' => $username, 'id' => $employeeId]);

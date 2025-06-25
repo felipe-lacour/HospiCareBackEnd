@@ -47,7 +47,6 @@ public function getAllWithDetails() {
 }
 
 public function createByMRN($mrn, $doctorId, $text) {
-    // Ahora directamente usamos medical_rec_no
     return $this->create($mrn, $doctorId, $text);
 }
 

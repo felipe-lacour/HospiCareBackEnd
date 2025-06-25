@@ -61,7 +61,6 @@ class UserAccount extends Model {
     }
 
     public function createWithTokenLink(int $employeeId, string $username, int $roleId): array {
-        // Create the account with NULL password
         $stmt = $this->db->prepare("
             INSERT INTO {$this->table} (username, role_id, employee_id)
             VALUES (:username, :role_id, :employee_id)
@@ -72,10 +71,8 @@ class UserAccount extends Model {
             'employee_id' => $employeeId
         ]);
 
-        // Generate setup token
         $token = bin2hex(random_bytes(32));
 
-        // Store password setup request
         $psr = new \models\PasswordSetRequest();
         $psr->createToken($employeeId, $token);
 

@@ -17,7 +17,6 @@ class PatientController extends Controller {
         $user = AuthMiddleware::getUserFromToken();
         if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
 
-        // All roles can view patients
         $this->json($this->patientModel->getAll());
     }
 
@@ -45,7 +44,6 @@ public function store() {
         }
     }
 
-    // Generate MRN
     $medicalRecNo = 'MRN' . date('YmdHis') . strtoupper(bin2hex(random_bytes(2)));
 
     $personData = [
@@ -63,10 +61,8 @@ public function store() {
     ];
 
     try {
-        // 1) Create patient first (parent FK must exist)
         $newId = $this->patientModel->createPatient($personData, $patientData);
 
-        // 2) Then create clinical file (child, with ON DELETE CASCADE)
         $cfModel = new \models\ClinicalFile();
         $cfModel->create($medicalRecNo);
 

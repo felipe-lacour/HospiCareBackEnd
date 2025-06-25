@@ -12,15 +12,13 @@ class Doctor extends Model {
     protected $table = 'doctors';
 
     public function createDoctor(array $personData, array $doctorData): array {
-        // 1. Create employee, person, and user account together
         $employeeModel = new Employee();
-        $employeeResult = $employeeModel->createWithAccount($personData, 2); // 2 is the role ID for doctors
+        $employeeResult = $employeeModel->createWithAccount($personData, 2);
 
         $employeeId = $employeeResult['employee_id'];
         $username = $employeeResult['username'];
         $link = $employeeResult['setup_link'];
 
-        // 2. Create doctor
         $stmt = $this->db->prepare("
             INSERT INTO {$this->table} (doctor_id, license_no, specialty)
             VALUES (:doctor_id, :license_no, :specialty)
@@ -88,7 +86,6 @@ class Doctor extends Model {
 
         $personId = $row['person_id'];
 
-        // Actualizar persona
         $updates = [];
         foreach ($personData as $key => $value) {
             $updates[] = "$key = :$key";
@@ -98,7 +95,6 @@ class Doctor extends Model {
         ");
         $stmt->execute(array_merge($personData, ['person_id' => $personId]));
 
-        // Actualizar email en employees
         if ($email) {
             $stmt = $this->db->prepare("
             UPDATE employees SET email = :email WHERE employee_id = :id
@@ -109,13 +105,11 @@ class Doctor extends Model {
             ]);
         }
 
-        // Actualizar doctor
         $stmt = $this->db->prepare("
             UPDATE doctors SET license_no = :license_no, specialty = :specialty WHERE doctor_id = :id
         ");
         $stmt->execute(array_merge($doctorData, ['id' => $doctorId]));
 
-        // Actualizar username si es necesario
         if ($username) {
             $stmt = $this->db->prepare("
                 UPDATE user_accounts SET username = :username WHERE employee_id = :id

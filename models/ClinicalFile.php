@@ -16,7 +16,6 @@ class ClinicalFile extends Model {
 
 
 public function getByMRN(string $medicalRecNo, int $role) {
-    // Obtener la historia clínica
     $stmt = $this->db->prepare(
         "SELECT * FROM {$this->table} WHERE medical_rec_no = :mrn"
     );
@@ -35,11 +34,9 @@ public function getByMRN(string $medicalRecNo, int $role) {
         $clinicalFile['consult_notes'] = $notes;
     }
 
-    // Obtener datos del paciente desde el modelo Patient
     $patientModel = new Patient();
     $patient = $patientModel->getPatientByMRN($medicalRecNo);
 
-    // Agregar info combinada
     $clinicalFile['patient'] = $patient;
 
     return $clinicalFile;

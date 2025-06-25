@@ -37,7 +37,6 @@ class Database {
         return self::$instance;
     }
 
-    // Prevent cloning and unserializing to maintain singleton
     private function __clone() {}
     public function __wakeup() {}
 }

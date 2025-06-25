@@ -20,9 +20,7 @@ class DoctorController extends Controller {
         $user = $this->getAuthenticatedUser();
         if (!$user) return $this->json(['error' => 'Unauthorized'], 401);
 
-        // All roles can view the list of doctors
         if ((int)$user['role_id'] === 2) {
-            // If the user is a doctor, return only their own data
             $doctor = $this->doctorModel->getDoctorById($user['employee_id']);
             if ($doctor) {
                 $this->json($doctor);
@@ -42,11 +40,10 @@ class DoctorController extends Controller {
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['error' => 'Missing doctor ID'], 400);
 
-        // If the user is a doctor, they can only view their own data
         if ((int)$user['role_id'] === 2 && (int)$user['employee_id'] !== (int)$id) {
             return $this->json(['error' => 'Forbidden'], 403);
         }
-        
+
         $doctor = $this->doctorModel->getDoctorById($id);
 
         if ($doctor) {
@@ -65,7 +62,6 @@ class DoctorController extends Controller {
         $body = json_decode(file_get_contents('php://input'), true);
         if (!$body) return $this->json(['error' => 'Invalid JSON'], 400);
 
-        // Expected fields
         $required = ['first_name', 'last_name', 'dni', 'birth_date', 'address', 'phone', 'email', 'license_no', 'specialty'];
         foreach ($required as $field) {
             if (empty($body[$field])) {
@@ -89,7 +85,6 @@ class DoctorController extends Controller {
                 'specialty' => $body['specialty']
             ];
 
-            // Validar unicidad de datos
             $employeeModel = new Employee();
             if ($employeeModel->emailExists($body['email'])) {
                 return $this->json(['error' => 'Email already exists'], 400);

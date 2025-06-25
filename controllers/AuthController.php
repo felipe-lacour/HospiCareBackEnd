@@ -87,7 +87,6 @@ class AuthController extends Controller {
         $token = bin2hex(random_bytes(32));
         $expiresAt = date('Y-m-d H:i:s', strtotime('+1 day'));
 
-        // 👇 Using username due to current schema
         $tokenModel->create([
             'token' => $token,
             'user_id' => $user['username'],

@@ -20,7 +20,6 @@ class AuthTokenController extends Controller {
             $this->authUser = $tokenModel->getUserByToken($this->token);
         }
     }
-
     // Login endpoint
     public function login() {
         $body = json_decode(file_get_contents('php://input'), true);

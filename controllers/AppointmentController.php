@@ -26,7 +26,7 @@ private function getAuthenticatedUser(): ?array {
 
     if (!$userData || (!isset($userData['username']) && !isset($userData['user_id']))) return null;
 
-    $username = $userData['username'] ?? $userData['user_id']; // fallback if needed
+    $username = $userData['username'] ?? $userData['user_id']; 
     $userModel = new \models\UserAccount();
     $user = $userModel->findByUsername($username);
 

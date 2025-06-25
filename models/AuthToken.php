@@ -19,7 +19,7 @@ class AuthToken extends Model {
         ");
         $stmt->execute([
             'token' => $data['token'],
-            'user_id' => $data['user_id'], // ✅ correct key
+            'user_id' => $data['user_id'], 
             'expires_at' => $data['expires_at'],
         ]);
 

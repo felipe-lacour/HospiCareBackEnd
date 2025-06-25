@@ -17,10 +17,8 @@ class Patient extends Person {
     }
 
     public function createPatient(array $personData, array $patientData) {
-        // Create a new person entry first
         $personId = $this->create($personData);
 
-        // Now add patient-specific details
         $stmt = $this->db->prepare("
             INSERT INTO {$this->patientTable} (patient_id, medical_rec_no, blood_type)
             VALUES (:patient_id, :medical_rec_no, :blood_type)
@@ -64,7 +62,6 @@ public function getPatientByMRN(string $medicalRecNo) {
     public function updatePatient($id, array $data) {
     unset($data['dni'], $data['medical_rec_no']);
 
-    // Actualizar tabla `persons`
     $stmt1 = $this->db->prepare("
         UPDATE persons SET
             first_name = :first_name,
@@ -83,7 +80,6 @@ public function getPatientByMRN(string $medicalRecNo) {
         'id' => $id
     ]);
 
-    // Actualizar tabla `patients`
     $stmt2 = $this->db->prepare("
         UPDATE {$this->patientTable} SET
             blood_type = :blood_type

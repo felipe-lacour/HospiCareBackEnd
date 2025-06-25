@@ -24,7 +24,6 @@ class EmployeeController extends Controller {
         $body = json_decode(file_get_contents('php://input'), true);
         if (!$body) return $this->json(['error' => 'Invalid JSON'], 400);
 
-        // Expected fields: first_name, last_name, dni, birth_date, address, phone, email
         $required = ['first_name', 'last_name', 'dni', 'birth_date', 'address', 'phone', 'email'];
         foreach ($required as $field) {
             if (empty($body[$field])) {
@@ -41,7 +40,7 @@ class EmployeeController extends Controller {
                 return $this->json(['error' => 'DNI already exists'], 400);
             }
 
-            $result = $this->employeeModel->createWithAccount($body, 3); // 3 = receptionist (or general employee)
+            $result = $this->employeeModel->createWithAccount($body, 3);
 
             $this->json([
                 'success' => true,
@@ -89,7 +88,6 @@ class EmployeeController extends Controller {
             return $this->json(['error' => 'Invalid input'], 400);
         }
 
-        // Expected fields: first_name, last_name, address, phone, email
         $required = ['first_name', 'last_name', 'address', 'phone', 'email', 'username'];
         foreach ($required as $field) {
             if (empty($body[$field])) {
@@ -138,7 +136,6 @@ class EmployeeController extends Controller {
 
         $employeeId = (int) $body['employee_id'];
 
-        // Solo puede cambiar su propio perfil
         if ((int)$user['employee_id'] !== $employeeId) {
             return $this->json(['error' => 'Unauthorized'], 403);
         }
@@ -167,10 +164,8 @@ class EmployeeController extends Controller {
                 return $this->json(['error' => 'Username already exists'], 400);
             }
 
-            // Actualizar datos
             $this->employeeModel->update($employeeId, $personData, $email, $username);
 
-            // Devolver nuevo usuario para frontend
             return $this->json([
                 'success' => true,
                 'user' => [

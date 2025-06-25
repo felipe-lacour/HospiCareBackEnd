@@ -57,10 +57,9 @@ class ClinicalFileController extends Controller {
         $file = $this->cfModel->getByMRN($mrn, $user['role_id']);
         return $this->json($file ?: ['error' => 'Not found'], $file ? 200 : 404);
     }
-
     /**
      * POST /clinical-files
-     * Body JSON: { "medical_rec_no": "MRN..." }
+     * Body JSON: { "medical_rec_no": "..." }
      */
     public function store() {
         $user = $this->getCurrentUser();
@@ -102,7 +101,6 @@ class ClinicalFileController extends Controller {
      */
 public function addNote() {
     $user = $this->getCurrentUser();
-    // only doctors (2) and admins (1) can add
     if ($user['role_id'] !== 2 && $user['role_id'] !== 1) {
         return $this->json(['error' => 'Only doctors or admins can add notes'], 403);
     }
@@ -112,18 +110,13 @@ public function addNote() {
         return $this->json(['error' => 'Missing fields'], 400);
     }
 
-    // 1) Determine which doctor_id to use:
     if ((int)$user['role_id'] === 2) {
-        // doctors may only add under their own ID
         $doctorId = $user['employee_id'];
     } else {
-        // admin must explicitly specify a valid doctor_id
         if (empty($body['doctor_id'])) {
             return $this->json(['error' => 'Missing doctor_id'], 400);
         }
         $doctorId = (int)$body['doctor_id'];
-        // you could also verify it exists:
-        // if (!$this->noteModel->doctorExists($doctorId)) { … }
     }
 
     $noteId = $this->noteModel->createByMRN(

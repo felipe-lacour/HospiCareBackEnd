@@ -73,7 +73,7 @@ class PrescriptionController extends Controller {
         if (!$body) return $this->json(['error' => 'Invalid JSON'], 400);
 
         try {
-            $body['doctor_id'] = $this->user['employee_id'];  // enforce doctor ownership
+            $body['doctor_id'] = $this->user['employee_id']; 
             $rxId = $this->rxModel->create($body);
             $this->json(['success' => true, 'prescription_id' => $rxId]);
         } catch (\Exception $e) {
