@@ -79,7 +79,7 @@ class AuthController extends Controller {
 
         $docModel = new Doctor();
         $doc = $docModel->getDoctorById($user['employee_id']);
-        if (!$doc['employed']) {
+        if ($doc && !$doc['employed']) {
             return $this->json(['error' => 'Your access has been revoked, please contact an admin'], 401);
         }
 
