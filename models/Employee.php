@@ -100,7 +100,11 @@ class Employee extends Model {
             SELECT e.*, p.first_name, p.last_name, p.dni, p.birth_date, p.address, p.phone
             FROM employees e
             JOIN persons p ON e.person_id = p.person_id
-            WHERE e.employee_id NOT IN (SELECT doctor_id FROM doctors)
+            WHERE e.employee_id NOT IN (
+                SELECT doctor_id FROM doctors
+                UNION
+                SELECT employee_id FROM user_accounts WHERE role_id = 1
+            )
         ");
         $stmt->execute();
         return $stmt->fetchAll();
